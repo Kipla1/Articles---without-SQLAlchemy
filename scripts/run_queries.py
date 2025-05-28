@@ -1,5 +1,3 @@
-# This script runs example queries against the database to demonstrate functionality.
-
 import sqlite3
 from lib.db.connection import get_connection
 
@@ -7,21 +5,18 @@ def run_example_queries():
     connection = get_connection()
     cursor = connection.cursor()
 
-    # Example query: Fetch all authors
     cursor.execute("SELECT * FROM authors;")
     authors = cursor.fetchall()
     print("Authors:")
     for author in authors:
         print(author)
 
-    # Example query: Fetch all articles
     cursor.execute("SELECT * FROM articles;")
     articles = cursor.fetchall()
     print("\nArticles:")
     for article in articles:
         print(article)
 
-    # Example query: Fetch all magazines
     cursor.execute("SELECT * FROM magazines;")
     magazines = cursor.fetchall()
     print("\nMagazines:")

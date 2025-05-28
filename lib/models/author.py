@@ -1,20 +1,12 @@
-# from lib.db.connection import get_connection
-import sqlite3
+from lib.db.connection import get_connection
 
-
-conn = sqlite3.connect('authors.db')
-c = conn.c()
-c.execute("""CREATE TABLE IF NOT EXISTS authors (
-id INTEGER PRIMARY KEY,
-name VARCHAR(255) NOT NULL
-)""")
 class Author:
     def __init__(self, name, id=None):
         self.id = id
         self.name = name
     
     def __repr__(self):
-        return f"Author {self.name}"
+        return f"Author({self.name})"
     
     @property
     def name(self):
@@ -28,6 +20,9 @@ class Author:
     
     def save(self):
         """Save author to database"""
+        conn = get_connection()
+        c = conn.cursor()
+        
         if self.id is None:
             # Insert new author
             c.execute(
@@ -49,6 +44,8 @@ class Author:
     @classmethod
     def find_by_id(cls, id):
         """Find author by ID"""
+        conn = get_connection()
+        c = conn.cursor()
         c.execute("SELECT * FROM authors WHERE id = ?", (id,))
         row = c.fetchone()
         conn.close()
@@ -60,6 +57,8 @@ class Author:
     @classmethod
     def find_by_name(cls, name):
         """Find author by name"""
+        conn = get_connection()
+        c = conn.cursor()
         c.execute("SELECT * FROM authors WHERE name = ?", (name,))
         row = c.fetchone()
         conn.close()
@@ -71,6 +70,8 @@ class Author:
     @classmethod
     def all(cls):
         """Get all authors"""
+        conn = get_connection()
+        c = conn.cursor()
         c.execute("SELECT * FROM authors")
         rows = c.fetchall()
         conn.close()
@@ -79,16 +80,23 @@ class Author:
     
     def articles(self):
         """Get all articles written by this author"""
+        from lib.models.article import Article
+        conn = get_connection()
+        c = conn.cursor()
         c.execute("""
             SELECT * FROM articles
             WHERE author_id = ?
         """, (self.id,))
         rows = c.fetchall()
         conn.close()
-        return rows
+        return [Article(title=row['title'], author_id=row['author_id'], 
+                       magazine_id=row['magazine_id'], id=row['id']) for row in rows]
     
     def magazines(self):
         """Get all unique magazines this author has contributed to"""
+        from lib.models.magazine import Magazine
+        conn = get_connection()
+        c = conn.cursor()
         c.execute("""
             SELECT DISTINCT m.* FROM magazines m
             JOIN articles a ON m.id = a.magazine_id
@@ -96,7 +104,7 @@ class Author:
         """, (self.id,))
         rows = c.fetchall()
         conn.close()
-        return rows
+        return [Magazine(name=row['name'], category=row['category'], id=row['id']) for row in rows]
     
     def add_article(self, magazine, title):
         """Create and insert a new Article for this author"""
@@ -112,6 +120,8 @@ class Author:
     
     def topic_areas(self):
         """Get unique categories of magazines this author has contributed to"""
+        conn = get_connection()
+        c = conn.cursor()
         c.execute("""
             SELECT DISTINCT m.category FROM magazines m
             JOIN articles a ON m.id = a.magazine_id
